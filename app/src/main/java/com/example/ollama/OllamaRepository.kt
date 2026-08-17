@@ -1,9 +1,8 @@
-/*
- * Copyright (c) 2026 Pablo Daniel De Luca
- * Ink 318 Software
- * DNI: 31.649.936
- * Todos los derechos reservados.
- */
+// © 2026 Pablo Daniel de Luca - Ink 318 Software. Todos los derechos reservados.
+// DNI: 31.649.936
+// Este archivo es propiedad exclusiva de Pablo Daniel de Luca / Ink 318 Software.
+// Queda prohibida su reproducción, distribución, modificación, venta o uso total o parcial sin autorización expresa y por escrito del titular.
+
 package com.example.ollama
 
 import com.squareup.moshi.Moshi
@@ -45,7 +44,7 @@ class OllamaRepository(
     private val generateAdapter = moshi.adapter(OllamaGenerateResponse::class.java)
     private val pullAdapter = moshi.adapter(OllamaPullResponse::class.java)
 
-    private var api: OllamaApi = buildApi(baseUrl)
+    private var service: OllamaService = buildService(baseUrl)
 
     fun updateServerConfig(url: String, modelName: String) {
         var formattedUrl = url.trim()
@@ -59,10 +58,10 @@ class OllamaRepository(
         if (modelName.isNotBlank()) {
             selectedModel = modelName.trim()
         }
-        api = buildApi(baseUrl)
+        service = buildService(baseUrl)
     }
 
-    private fun buildApi(url: String): OllamaApi {
+    private fun buildService(url: String): OllamaService {
         val client = OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(180, TimeUnit.SECONDS)
@@ -74,7 +73,7 @@ class OllamaRepository(
             .client(client)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
-            .create(OllamaApi::class.java)
+            .create(OllamaService::class.java)
     }
 
     /**
@@ -92,7 +91,7 @@ class OllamaRepository(
                 stream = true
             )
 
-            val response = api.generateStream(req)
+            val response = service.generateStream(req)
             if (!response.isSuccessful || response.body() == null) {
                 val errCode = response.code()
                 emit("Error local Ollama (HTTP $errCode). Verifica que el modelo '$selectedModel' esté activo.")
@@ -139,7 +138,7 @@ class OllamaRepository(
                 system = systemPrompt,
                 stream = false
             )
-            val resp = api.generate(req)
+            val resp = service.generate(req)
             if (resp.isSuccessful && resp.body() != null) {
                 val text = resp.body()?.response
                 if (!text.isNullOrBlank()) {
@@ -148,7 +147,7 @@ class OllamaRepository(
                     OllamaResult.Error("Respuesta vacía del modelo local.")
                 }
             } else {
-                OllamaResult.Error("Error $resp.code() al conectar con Ollama local.")
+                OllamaResult.Error("Error ${resp.code()} al conectar con Ollama local.")
             }
         } catch (e: Exception) {
             OllamaResult.Error("Fallo de conexión local: ${e.message}")
@@ -161,7 +160,7 @@ class OllamaRepository(
     fun pullModel(modelName: String): Flow<OllamaPullResponse> = flow {
         try {
             val req = OllamaPullRequest(name = modelName, stream = true)
-            val resp = api.pullModelStream(req)
+            val resp = service.pullModelStream(req)
             if (!resp.isSuccessful || resp.body() == null) {
                 emit(OllamaPullResponse(error = "HTTP ${resp.code()}: No se pudo descargar el modelo $modelName"))
                 return@flow
@@ -194,7 +193,7 @@ class OllamaRepository(
      */
     suspend fun checkConnection(): OllamaConnectionState {
         return try {
-            val resp = api.getTags()
+            val resp = service.getTags()
             if (resp.isSuccessful) OllamaConnectionState.CONNECTED else OllamaConnectionState.DISCONNECTED
         } catch (e: Exception) {
             OllamaConnectionState.DISCONNECTED
@@ -206,7 +205,7 @@ class OllamaRepository(
      */
     suspend fun getInstalledModels(): List<String> {
         return try {
-            val resp = api.getTags()
+            val resp = service.getTags()
             if (resp.isSuccessful) {
                 resp.body()?.models?.map { it.name } ?: emptyList()
             } else emptyList()

@@ -1,6 +1,6 @@
 {
-  "name": "Base App",
-  "description": "A base Android application.",
+  "name": "CyberIA 318",
+  "description": "Asistente neuronal offline soberano con integración local Ollama y Termux SSH por Ink 318 Software.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

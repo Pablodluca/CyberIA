@@ -1,9 +1,8 @@
-/*
- * Copyright (c) 2026 Pablo Daniel De Luca
- * Ink 318 Software
- * DNI: 31.649.936
- * Todos los derechos reservados.
- */
+// © 2026 Pablo Daniel de Luca - Ink 318 Software. Todos los derechos reservados.
+// DNI: 31.649.936
+// Este archivo es propiedad exclusiva de Pablo Daniel de Luca / Ink 318 Software.
+// Queda prohibida su reproducción, distribución, modificación, venta o uso total o parcial sin autorización expresa y por escrito del titular.
+
 package com.example
 
 import android.Manifest
@@ -46,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.assistant.LocalCommandExecutor
 import com.example.assistant.FloatingBubbleService
+import com.example.assistant.TermuxManager
 import com.example.ui.components.OllamaChatView
 import com.example.ui.components.CyberCore
 import com.example.ui.components.StarfieldBackground
@@ -69,7 +69,26 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 1. Solicitud de Burbuja / Superposición
+        LocalCommandExecutor.appContext = applicationContext
+
+        // 1. Iniciar Termux en segundo plano para habilitar SSH y comandos como Foreground Service
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+                }
+            }
+            val serviceIntent = Intent(this, com.example.assistant.TermuxForegroundService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // 2. Solicitud de Burbuja / Superposición
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
             startActivity(intent)
@@ -78,7 +97,7 @@ class MainActivity : ComponentActivity() {
             startService(Intent(this, FloatingBubbleService::class.java))
         }
 
-        // 2. Archivos Totales
+        // 3. Archivos Totales
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
                 try {

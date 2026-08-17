@@ -1,9 +1,8 @@
-/*
- * Copyright (c) 2026 Pablo Daniel De Luca
- * Ink 318 Software
- * DNI: 31.649.936
- * Todos los derechos reservados.
- */
+// © 2026 Pablo Daniel de Luca - Ink 318 Software. Todos los derechos reservados.
+// DNI: 31.649.936
+// Este archivo es propiedad exclusiva de Pablo Daniel de Luca / Ink 318 Software.
+// Queda prohibida su reproducción, distribución, modificación, venta o uso total o parcial sin autorización expresa y por escrito del titular.
+
 package com.example.ollama
 
 import okhttp3.ResponseBody
@@ -13,7 +12,10 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Streaming
 
-interface OllamaApi {
+/**
+ * Ink 318 Software - Interfaz de Servicio Retrofit para comunicación con Ollama API
+ */
+interface OllamaService {
 
     @POST("api/generate")
     suspend fun generate(
